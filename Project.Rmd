@@ -1,0 +1,79 @@
+---
+title: "Course Project"
+author: "Tian Qin"
+date: "5/21/2019"
+output: html_document
+---
+
+# Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+# Data
+
+The training data for this project are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+# Method
+
+Load the data
+```{r}
+dataset <- read.csv('pml-training.csv', na.strings = c('','NA','#DIV/0!'))
+
+#remove non-important columns
+dataset  <-dataset[,-c(1:7)]
+
+#remove missing values
+dataset<-dataset[,colSums(is.na(dataset)) == 0]
+
+
+```
+
+cross-validation: 70% for training and 30% for testing
+```{r message=FALSE}
+library(caret)
+```
+
+```{r}
+set.seed(1000)
+trainSet <- createDataPartition(y=dataset$classe, p=0.7,list=F)
+training <- dataset[trainSet,]
+testing <- dataset[-trainSet,]
+
+```
+
+
+```{r message=FALSE}
+library(randomForest)
+
+model <- randomForest(classe ~. , data=training, method='class')
+print(model)
+
+prediction <- predict(model, testing,type='class')
+
+
+confusionMatrix(prediction, testing$classe)
+```
+
+```{r}
+testset <- read.csv('pml-testing.csv', na.strings = c('','NA','#DIV/0!'))
+
+testset  <-testset[,-c(1:7)]
+
+testset<-testset[,colSums(is.na(testset)) == 0]
+
+prediction2 <- predict(model, testset,type='class')
+prediction2
+
+```
+
+# Discussion
+
+In this study, observations are divided into 5 groups by class 'A', 'B', 'C', 'D', 'E'. After orginization, 70% of data are used as training data, and the rest for test. As to the training, the error rate is low as 0.52%, which is excellent. For test data, the accuracy could be high as 97%. Overall, the data collected could be useful to predict the exercise class. 
